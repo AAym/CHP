@@ -1,0 +1,7 @@
+1                 #Lx
+1                 #Ly
+4                 #Nx
+4                 #Ny
+1                 #D
+Sinusoidal        #SystType
+1E-10             #epsilon

@@ -1,0 +1,49 @@
+                                      !!!!!!!!!!!!!!!!!!!!!!
+                                      !  Notes projet CHP  !
+                                      !!!!!!!!!!!!!!!!!!!!!!
+
+
+                                        ALGORITHME TERMINE
+
+
+Important !!!
+  * Rentrer l'instruction ./script.sh dans le terminal.
+  * Faire 2 fois quand modification dans un module (si beug... je sais pas pourquoi)
+
+
+Avancées Projet :
+  * Makefile et script effectués. Penser à ajouter les modules dans le makefile quand nouveaux.
+  * Module de renumérotation (Num.f90) complet. TEST OK
+  * Module des fonctions second membre et conditions de bord (Func.f90) complet également. TEST OK
+  * Module de construction du système matriciel (Syst.f90) fini. TEST OK
+  * Conditions de bord sont implémentées dans le second membre.
+  * Module de lecture des données presque fini. Penser à définir dt avec les conditions de stabilité et de positivité.
+  * Utilisation des variables globales pour Nx, Ny, Lx, Ly, D, dx, dy, dt.
+  * Gradient Conjugué codé : TEST OK
+
+
+Notes :
+  * Il serait intéressant de passer les variables Lx, Ly, Nx, Ny, dt, dx, dy en variables globales
+    afin de ne pas avoir besoin de les appeler à chaque fonction.
+        => Module Data pour ça. Qui fait lecture des données en plus.
+  * On ne définit pas la matrice A : on définit une subroutine ou fonction qui effectue le produit matriciel.
+  * Pour le moment on ne s'occupe pas de paralléliser. Pas besoin des modules MPI : Repartition.f90 et GC_MPI.f90 (a finir)
+  * Nx et Ny correspondend au nombre de point dans le domaine INTERNE au système !!!
+  * Ajouter fonctions ProdScal et Norme si non existant.
+
+
+Schéma de la numérotation :
+         j=1 j=2 j=3
+        _________________________________________   0
+  i=1  | 1   2   3   4   5   6   7   8   9   10 |   |
+  i=2  | 11  12  13  14  15  16  17  18  19  20 |   |
+  i=3  |                                        |   |
+       |                                        |   x  Lx
+       |                                        |   |
+       |                                        |   |
+       |                                        |   |
+i=Nx+1 |________________________________________|   1
+
+       0----------------y-----------------------1
+                        Ly
+  !!! Nx correspond au nombre de point dans le domaine INTERNE au système
