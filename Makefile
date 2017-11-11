@@ -1,19 +1,16 @@
-# Compilateur utilisé
 CC=gfortran
-
-# Le nom de l'exécutable
 PROG = run
+SRC = Data.f90 Num.f90 Func.f90 System.f90 GC.f90
+OBJ = $(SRC:.f90=.o)
 
-# Les fichiers source à compiler
-SRC = Main.f90 Num.f90 Func.f90 Data.f90 System.f90 GC.f90
+vpath %.f90 src
 
-# La commande complète : compile seulement si un fichier a été modifié
-$(PROG) : $(SRC)
-	$(CC) $(SRC) -o $(PROG)
-# Évite de devoir connaitre le nom de l'exécutable
-all : $(PROG)
+all : $(OBJ) Main.o
+	$(CC) $^ -o $(PROG)
 
-# Supprime l'exécutable, les fichiers binaires (.o) et les fichiers
-# temporaires de sauvegarde (~)
+%.o: %.f90
+	$(CC) -c $<
+
+.PHONY: clean
 clean :
-	rm -f *.o *~ $(PROG)
+	rm -f *.o *.mod *~ $(PROG)
