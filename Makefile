@@ -16,4 +16,4 @@ all : $(PROG)
 # Supprime l'exécutable, les fichiers binaires (.o) et les fichiers
 # temporaires de sauvegarde (~)
 clean :
-	rm -f *.o *~ $(PROG)
+	rm -rf *.o *~ $(PROG) *.mod src/*.mod src/*~
