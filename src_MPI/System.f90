@@ -17,44 +17,31 @@ MODULE System
 
 CONTAINS
 
-  ! Definit la solution du initiale du système : U0
-  Subroutine Init(U)
-
-    Real, Dimension(Nx*Ny), Intent(out):: U
-    Integer :: k
-    Real, Dimension(2) :: XY
-    Integer, Dimension(2) :: IJ
-
-    U = 1
-
-  End Subroutine
-
-
   ! Definit le second membre de notre système matriciel : F + U + CdB (Fonctionnel)
-  Subroutine BuiltSecondMembre(SecondMembre,U,t)
+  Subroutine BuiltSecondMembre(SecondMembre,U,t,nb_lignes,i1,Bord_inf,Bord_sup)
 
-    Real, Dimension(Nx*Ny), Intent(out):: SecondMembre
-    Real, Dimension(Nx*Ny), Intent(in):: U
-    Real :: t
+    Real, Dimension(nb_lignes), Intent(out):: SecondMembre
+    Real, Dimension(:), Intent(in):: U,Bord_inf,Bord_sup
+    Real, intent(in) :: t,nb_lignes,i1
     Integer :: k
     Real, Dimension(2) :: XY
     Integer, Dimension(2) :: IJ
 
-    Do k = 1,(Nx*Ny)
+    Do k = i1,nb_lignes+i1-1
       XY = Direct(k)
       IJ = Local(k)
-      SecondMembre(k) = dt*F(XY(1),XY(2),t) + U(k)
+      SecondMembre(k-i1+1) = dt*F(XY(1),XY(2),t) + U(k-i1+1)
       If (IJ(1)==1) Then
-        SecondMembre(k) = SecondMembre(k) + D*dt/(dx*dx)*G(0.,XY(2))
+        SecondMembre(k-i1+1) = SecondMembre(k-i1+1) + D*dt/(dx*dx)*G(0.,XY(2))
       End If
-      If (IJ(2)==1) Then
-        SecondMembre(k) = SecondMembre(k) + D*dt/(dy*dy)*H(XY(1),0.)
+      If (IJ(2)==i1) Then
+        SecondMembre(k-i1+1) = SecondMembre(k-i1+1) + D*dt/(dy*dy)*Bord_inf(IJ(1))
       End If
       If (IJ(1)==Nx) Then
-        SecondMembre(k) = SecondMembre(k) + D*dt/(dx*dx)*G(Lx,XY(2))
+        SecondMembre(k-i1+1) = SecondMembre(k-i1+1) + D*dt/(dx*dx)*G(Lx,XY(2))
       End If
-      If (IJ(2)==Ny) Then
-        SecondMembre(k) = SecondMembre(k) + D*dt/(dy*dy)*H(XY(1),Ly)
+      If (IJ(2)==nb_lignes+i1-1) Then
+        SecondMembre(k-i1+1) = SecondMembre(k-i1+1) + D*dt/(dy*dy)*Bord_sup(IJ(1))
       End If
 !      Print *, "k = ", k, "SecondMembre(k) = ", SecondMembre(k)
     End Do

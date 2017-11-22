@@ -5,3 +5,4 @@
 1                 #D
 Sinusoidal        #SystType
 1E-10             #epsilon
+1		  #R

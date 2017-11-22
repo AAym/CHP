@@ -21,11 +21,10 @@ PROGRAM Main
 
   ! Variables test
     Integer :: k1, k2, k3, k4
-    Real, Dimension(:), Allocatable  :: Test
-    Real, Dimension(:), Allocatable  :: Test2
+    Real, Dimension(:), Allocatable  :: Test, Test2, Bord_inf, Bord_sup
   ! Variables résolution
     Real, Dimension(:), Allocatable :: U , SecondMembre, Uprev
-    Integer, Dimension(2) :: IJ
+    Integer, Dimension(2) :: IJ, nb_lignes
     Real, Dimension(2) :: XY
     Integer :: k
     Real :: t, max
@@ -44,36 +43,29 @@ PROGRAM Main
     Print *, "dx = ", dx
     Print *, "dy = ", dy
     Print *, "dt= ", dt
+    Print *, "Recouvrement : ", R
     Print *, "------------------------------------------"
   
     call charge(me, Np, Ny, i1, in)
 
-  !Allocation
-    if (me==0) then
-       
-       Allocate(U(Nx*(in-i1)), SecondMembre(Nx*(in-i1)), Uprev(Nx*(in-i1)))
-       !Allocate(Test(Nx*Ny), Test2(Nx*Ny)) utilité ?
-
-    else
-
-       Allocate(U(Nx*(in-i1+1)), SecondMembre(Nx*(in-i1+1)), Uprev(Nx*(in-i1+1)))
-
-    end if
-
-
+    !Allocation
+    nb_lignes = in-i1+1+(R-1)
+    Allocate(U(Nx*nb_lignes), SecondMembre(Nx*nb_lignes), Uprev(Nx*nb_lignes))
+    Allocate(Bord_inf(Nx), Bord_sup(Nx))
   !Résolution
     t = 0
-    Call Init(U)
+    U = 0
     UPrev = 0
-
+    Bord_inf = 0
+    Bord_sup = 0
+    
     Do while (max > 1E-1)
-      Print *, "-------------------------------------"
-      Print *, "t = ", t
-      Call BuiltSecondMembre(SecondMembre,U,t)
-      UPrev = U
-      Call GC(U,SecondMembre)
-      Print *, "-------------------------------------"
-      t = t + dt
+       ! Ne pas oublier la construction/actualisation de bord_inf et bord_sup
+       Call BuiltSecondMembre(SecondMembre,U,t,nb_lignes,i1,Bord_inf,Bord_sup)
+       UPrev = U
+       Call GC(U,SecondMembre)
+       Print *, "-------------------------------------"
+       t = t + dt
     End Do
 
     If (SystType == "Stationnaire" .or. SystType == "Sinusoidal") Then
@@ -88,7 +80,7 @@ PROGRAM Main
 
     Print *, U
   !Deallocation
-    Deallocate(U, SecondMembre, Uexact, Uprev)
+    Deallocate(U, SecondMembre, Uprev, Bord_inf, Bord_sup, Test, Test2)
 
     call MPI_FINALIZE(statinfo)
 

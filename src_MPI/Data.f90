@@ -26,6 +26,7 @@ CONTAINS
       Read (unit=11,fmt=*) D
       Read (unit=11,fmt=*) SystType
       Read (unit=11,fmt=*) epsilon
+      Read (unit=11,fmt=*) R
 
     close(unit=11)                   ! fermeture fu fichier
 
