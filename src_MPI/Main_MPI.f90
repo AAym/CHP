@@ -58,6 +58,19 @@ PROGRAM Main
     UPrev = 0
     Bord_inf = 0
     Bord_sup = 0
+
+    if(me==0) then
+	do i=1,Nx
+		Bord_inf(i)=h(i*dx,0)
+	end do
+    end if
+
+    if (me==Np-1)
+	do i=1,Nx
+		Bord_sup(i)=h(i*dx,Ly)
+	end do
+    end if
+
     
     Do while (max > 1E-1)
        ! Ne pas oublier la construction/actualisation de bord_inf et bord_sup
