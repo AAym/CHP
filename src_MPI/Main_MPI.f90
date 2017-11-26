@@ -77,6 +77,21 @@ PROGRAM Main
        Call BuiltSecondMembre(SecondMembre,U,t,nb_lignes,i1,Bord_inf,Bord_sup)
        UPrev = U
        Call GC(U,SecondMembre)
+     
+       ! if (me==0) then
+       !    Call MPI_Recv() ! recevoir de 1
+       !    Call MPI_Send()
+       ! else if (me==Np-1) then
+       !    Call MPI_Recv() ! recevoir de Np-2
+       !    Call MPI_Send() !
+       ! else 
+       !    Call MPI_Send() ! envoyer a +1
+       !    Call MPI_Send() ! envoyer a -1
+       !    Call MPI_Recv() ! recevoir de +1
+       !    Call MPI_Recv() ! recevoir de -1
+       ! end if 
+     
+       
        Print *, "-------------------------------------"
        t = t + dt
     End Do

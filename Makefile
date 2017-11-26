@@ -3,7 +3,7 @@ PROG = run
 SRC = Data.f90 Num.f90 Func.f90 System.f90 GC.f90
 OBJ = $(SRC:.f90=.o)
 
-vpath %.f90 src
+vpath %.f90 src_MPI
 
 all : $(OBJ) Main.o
 	$(CC) $^ -o $(PROG)
