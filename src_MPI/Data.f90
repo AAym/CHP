@@ -3,9 +3,9 @@ Module Data
   IMPLICIT NONE
 
   Real :: Lx, Ly, D, dx, dy, dt , epsilon
-  Integer :: Nx, Ny
+  Integer :: Nx, Ny, R
   Character (len = 32) :: SystType
-
+  
 
 CONTAINS
 

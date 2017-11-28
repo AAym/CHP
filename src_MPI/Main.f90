@@ -30,7 +30,6 @@ PROGRAM Main
     Real :: t, max
 
 
-
   ! Lecture variables
     Call ReadData()
     Print *, "----------------Variables-----------------"
@@ -77,19 +76,30 @@ PROGRAM Main
        Call BuiltSecondMembre(SecondMembre,U,t,nb_lignes,i1,Bord_inf,Bord_sup)
        UPrev = U
        Call GC(U,SecondMembre)
-     
-       ! if (me==0) then
-       !    Call MPI_Recv() ! recevoir de 1
-       !    Call MPI_Send()
-       ! else if (me==Np-1) then
-       !    Call MPI_Recv() ! recevoir de Np-2
-       !    Call MPI_Send() !
-       ! else 
-       !    Call MPI_Send() ! envoyer a +1
-       !    Call MPI_Send() ! envoyer a -1
-       !    Call MPI_Recv() ! recevoir de +1
-       !    Call MPI_Recv() ! recevoir de -1
-       ! end if 
+       
+       !! Communication
+       do i=1,Nx
+          Bord_inf = U( (nb_lignes-2*(R-1))*Nx + 1 + i)
+          Bord_sup = U( (1+2*(R-1)-1)*Nx + 1 + i)
+       end do
+
+       Allocate(Tmp(Nx))
+       if (me==0) then    
+          Tmp = Bord_sup
+          Call MPI_Recv(Bord_sup,Nx,MPI_REAL,me+1,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE,statinfo)   
+          Call MPI_Send(Tmp, Nx,MPI_REAL,me+1,MPI_ANY_TAG,MPI_COMM_WORLD,statinfo)
+       else if (me==Np-1) then
+          Tmp = Bord_infw
+          Call MPI_Recv(Bord_inf,Nx,MPI_REAL,me-1,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE,statinfo)
+          Call MPI_Send(Tmp, Nx,MPI_REAL,me-1,MPI_ANY_TAG,MPI_COMM_WORLD,statinfo)
+
+       else 
+
+          Call MPI_Send(Bord_sup, Nx,MPI_REAL,me+1,MPI_ANY_TAG,MPI_COMM_WORLD,statinfo)
+          Call MPI_Send(Bord_inf, Nx,MPI_REAL,me-1,MPI_ANY_TAG,MPI_COMM_WORLD,statinfo)  
+          Call MPI_Recv(Bord_sup,Nx,MPI_REAL,me+1,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE,statinfo)   
+          Call MPI_Recv(Bord_inf,Nx,MPI_REAL,me-1,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE,statinfo)   
+       end if
      
        
        Print *, "-------------------------------------"
