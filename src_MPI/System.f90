@@ -19,10 +19,12 @@ CONTAINS
 
   ! Definit le second membre de notre système matriciel : F + U + CdB (Fonctionnel)
   Subroutine BuiltSecondMembre(SecondMembre,U,t,nb_lignes,i1,Bord_inf,Bord_sup)
+	
 
+    Integer,intent(in)::nb_lignes,i1
     Real, Dimension(nb_lignes), Intent(out):: SecondMembre
     Real, Dimension(:), Intent(in):: U,Bord_inf,Bord_sup
-    Real, intent(in) :: t,nb_lignes,i1
+    Real, intent(in) :: t
     Integer :: k
     Real, Dimension(2) :: XY
     Integer, Dimension(2) :: IJ

@@ -7,27 +7,31 @@ PROGRAM Main
   Use Func
   Use System
   Use GradientConjugue
-  include "mpif.h"
+  
 
   IMPLICIT NONE
 
+    integer::mpi_status_size
     integer,dimension(MPI_STATUS_SIZE)::status
     integer,parameter::tag=100
     integer::statinfo
 
+    
+
+  ! Variables test
+    Integer :: k1, k2, k3, k4, Np, me, i1, in, mpi_any_tag, mpi_comm_world, mpi_status_ignore, nb_lignes
+    Real, Dimension(:), Allocatable  :: Test, Test2, Bord_inf, Bord_sup
+  ! Variables résolution
+    Real, Dimension(:), Allocatable :: U , SecondMembre, Uprev, Tmp,Uexact
+    Integer, Dimension(2) :: IJ
+    Real, Dimension(2) :: XY
+    Integer :: k, i
+    Real :: t, max
+
+
     call MPI_INIT(statinfo)
     call MPI_COMM_RANK(MPI_COMM_WORLD,me,statinfo)
     call MPI_COMM_SIZE(MPI_COMM_WORLD,Np,statinfo)
-
-  ! Variables test
-    Integer :: k1, k2, k3, k4
-    Real, Dimension(:), Allocatable  :: Test, Test2, Bord_inf, Bord_sup
-  ! Variables résolution
-    Real, Dimension(:), Allocatable :: U , SecondMembre, Uprev
-    Integer, Dimension(2) :: IJ, nb_lignes
-    Real, Dimension(2) :: XY
-    Integer :: k
-    Real :: t, max
 
 
   ! Lecture variables
@@ -46,10 +50,10 @@ PROGRAM Main
     Print *, "------------------------------------------"
   
     call charge(me, Np, Ny, i1, in)
-
+    
     !Allocation
     nb_lignes = in-i1+1+(R-1)
-    Allocate(U(Nx*nb_lignes), SecondMembre(Nx*nb_lignes), Uprev(Nx*nb_lignes))
+    Allocate(U(Nx*nb_lignes), SecondMembre(Nx*nb_lignes), Uprev(Nx*nb_lignes),Uexact(Nx*nb_lignes))
     Allocate(Bord_inf(Nx), Bord_sup(Nx))
   !Résolution
     t = 0
@@ -60,11 +64,11 @@ PROGRAM Main
 
     if(me==0) then
 	do i=1,Nx
-		Bord_inf(i)=h(i*dx,0)
+		Bord_inf(i)=h(i*dx,0.0)
 	end do
     end if
 
-    if (me==Np-1)
+    if (me==Np-1) then
 	do i=1,Nx
 		Bord_sup(i)=h(i*dx,Ly)
 	end do
@@ -73,6 +77,8 @@ PROGRAM Main
     
     Do while (max > 1E-1)
        ! Ne pas oublier la construction/actualisation de bord_inf et bord_sup
+
+
        Call BuiltSecondMembre(SecondMembre,U,t,nb_lignes,i1,Bord_inf,Bord_sup)
        UPrev = U
        Call GC(U,SecondMembre)
@@ -84,12 +90,13 @@ PROGRAM Main
        end do
 
        Allocate(Tmp(Nx))
+
        if (me==0) then    
           Tmp = Bord_sup
           Call MPI_Recv(Bord_sup,Nx,MPI_REAL,me+1,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE,statinfo)   
           Call MPI_Send(Tmp, Nx,MPI_REAL,me+1,MPI_ANY_TAG,MPI_COMM_WORLD,statinfo)
        else if (me==Np-1) then
-          Tmp = Bord_infw
+          Tmp = Bord_inf
           Call MPI_Recv(Bord_inf,Nx,MPI_REAL,me-1,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE,statinfo)
           Call MPI_Send(Tmp, Nx,MPI_REAL,me-1,MPI_ANY_TAG,MPI_COMM_WORLD,statinfo)
 
