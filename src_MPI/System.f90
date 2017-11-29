@@ -29,6 +29,7 @@ CONTAINS
     Real, Dimension(2) :: XY
     Integer, Dimension(2) :: IJ
 
+	
     Do k = i1,nb_lignes+i1-1
       XY = Direct(k)
       IJ = Local(k)

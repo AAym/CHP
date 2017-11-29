@@ -92,25 +92,26 @@ PROGRAM Main
        end do
 
        Allocate(Tmp(Nx))
+       if (Np /= 1) then
+          if (me==0) then    
+             Tmp = Bord_sup
+             Call MPI_Recv(Bord_sup,Nx,MPI_REAL,me+1,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE,statinfo)   
+             Call MPI_Send(Tmp, Nx,MPI_REAL,me+1,MPI_ANY_TAG,MPI_COMM_WORLD,statinfo)
+          else if (me==Np-1) then
+             Tmp = Bord_inf
+             Call MPI_Recv(Bord_inf,Nx,MPI_REAL,me-1,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE,statinfo)
+             Call MPI_Send(Tmp, Nx,MPI_REAL,me-1,MPI_ANY_TAG,MPI_COMM_WORLD,statinfo)
 
-       if (me==0) then    
-          Tmp = Bord_sup
-          Call MPI_Recv(Bord_sup,Nx,MPI_REAL,me+1,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE,statinfo)   
-          Call MPI_Send(Tmp, Nx,MPI_REAL,me+1,MPI_ANY_TAG,MPI_COMM_WORLD,statinfo)
-       else if (me==Np-1) then
-          Tmp = Bord_inf
-          Call MPI_Recv(Bord_inf,Nx,MPI_REAL,me-1,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE,statinfo)
-          Call MPI_Send(Tmp, Nx,MPI_REAL,me-1,MPI_ANY_TAG,MPI_COMM_WORLD,statinfo)
+          else 
 
-       else 
-
-          Call MPI_Send(Bord_sup, Nx,MPI_REAL,me+1,MPI_ANY_TAG,MPI_COMM_WORLD,statinfo)
-          Call MPI_Send(Bord_inf, Nx,MPI_REAL,me-1,MPI_ANY_TAG,MPI_COMM_WORLD,statinfo)  
-          Call MPI_Recv(Bord_sup,Nx,MPI_REAL,me+1,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE,statinfo)   
-          Call MPI_Recv(Bord_inf,Nx,MPI_REAL,me-1,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE,statinfo)   
+             Call MPI_Send(Bord_sup, Nx,MPI_REAL,me+1,MPI_ANY_TAG,MPI_COMM_WORLD,statinfo)
+             Call MPI_Send(Bord_inf, Nx,MPI_REAL,me-1,MPI_ANY_TAG,MPI_COMM_WORLD,statinfo)  
+             Call MPI_Recv(Bord_sup,Nx,MPI_REAL,me+1,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE,statinfo)   
+             Call MPI_Recv(Bord_inf,Nx,MPI_REAL,me-1,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE,statinfo)   
+          end if
        end if
      print*,"j'ai communiqué"
-       
+             
        Print *, "-------------------------------------"
        t = t + dt
        max=0
