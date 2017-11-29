@@ -6,7 +6,7 @@ OBJ = $(SRC:.f90=.o)
 vpath %.f90 src_MPI
 
 all : $(OBJ) Main.o
-	mpirun -np 2 $^ -o $(PROG)
+	$(CC) $^ -o $(PROG)
 
 %.o: %.f90
 	$(CC) -c $<
