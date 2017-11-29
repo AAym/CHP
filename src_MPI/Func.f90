@@ -81,5 +81,29 @@ CONTAINS
 
   End Function
 
+  subroutine charge(me,N,Np,i1,in)
+    
+    implicit none
+
+    integer,intent(in)::me,N,Np
+    integer,intent(inout)::i1,in
+    integer::diveuc,reste
+
+    diveuc=N/Np
+    reste=N-Np*diveuc
+
+    if(me<reste) then
+       i1=me*diveuc+me+1
+       in=i1+diveuc
+    else
+       i1=me*diveuc+reste+1
+       in=i1+diveuc-1
+    end if
+
+    
+
+
+  end subroutine charge
+
 
 END MODULE Func
