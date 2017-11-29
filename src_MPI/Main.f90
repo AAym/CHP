@@ -18,7 +18,7 @@ PROGRAM Main
 
   ! Variables test
     Integer :: k1, k2, k3, k4, Np, me, i1, in,nb_lignes
-    Real, Dimension(:), Allocatable  :: Test, Test2, Bord_inf, Bord_sup
+    Real, Dimension(:), Allocatable  ::  Bord_inf, Bord_sup
   ! Variables résolution
     Real, Dimension(:), Allocatable :: U , SecondMembre, Uprev, Tmp,Uexact
     Integer, Dimension(2) :: IJ
@@ -123,7 +123,7 @@ PROGRAM Main
 
     Print *, U
   !Deallocation
-    Deallocate(U, SecondMembre, Uprev, Bord_inf, Bord_sup, Test, Test2)
+    Deallocate(U, SecondMembre, Uprev, Bord_inf, Bord_sup)
 
     call MPI_FINALIZE(statinfo)
 
