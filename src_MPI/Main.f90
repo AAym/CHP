@@ -1,6 +1,6 @@
 PROGRAM Main
 
-  !USE MPI
+  Use MPI
 
   Use Data
   Use Num
@@ -8,10 +8,8 @@ PROGRAM Main
   Use System
   Use GradientConjugue
   
-
   IMPLICIT NONE
 
-    integer::mpi_status_size
     integer,dimension(MPI_STATUS_SIZE)::status
     integer,parameter::tag=100
     integer::statinfo
@@ -19,7 +17,7 @@ PROGRAM Main
     
 
   ! Variables test
-    Integer :: k1, k2, k3, k4, Np, me, i1, in, mpi_any_tag, mpi_comm_world, mpi_status_ignore, nb_lignes
+    Integer :: k1, k2, k3, k4, Np, me, i1, in,nb_lignes
     Real, Dimension(:), Allocatable  :: Test, Test2, Bord_inf, Bord_sup
   ! Variables résolution
     Real, Dimension(:), Allocatable :: U , SecondMembre, Uprev, Tmp,Uexact
