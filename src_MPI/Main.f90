@@ -50,14 +50,16 @@ PROGRAM Main
     call charge(me, Ny, Np, i1, in)
     
     !Allocation
-    nb_lignes = in-i1+1+(R-1)
+    print*, "ligne", in,i1,Ny
+    nb_lignes = in-i1+1
     Allocate(U(Nx*nb_lignes), SecondMembre(Nx*nb_lignes), Uprev(Nx*nb_lignes),Uexact(Nx*nb_lignes))
-    Allocate(Bord_inf(Nx), Bord_sup(Nx))
-  !Résolution
+    Allocate(Bord_inf(Nx), Bord_sup(Nx),Tmp(Nx))
+      
+    !Résolution
     t = 0
     U = 0
     UPrev = 0
-    print*,"J'initialise les bords"
+    ! print*,"J'initialise les bords"
     Bord_inf = 0
     Bord_sup = 0
     max=3
@@ -73,48 +75,52 @@ PROGRAM Main
 		Bord_sup(i)=h(i*dx,Ly)
 	end do
     end if
-    print*,"je rentre dans la boucle"
+    ! print*,"je rentre dans la boucle"
     
     Do while (max > 1E-1)
        ! Ne pas oublier la construction/actualisation de bord_inf et bord_sup
 
-       print*,"J'ai contruit 2nd membre 1"
+       ! print*,"J'ai contruit 2nd membre 1"
        Call BuiltSecondMembre(SecondMembre,U,t,nb_lignes,i1,Bord_inf,Bord_sup)
-	print*,"J'ai contruit 2nd membre"
+	! print*,"J'ai contruit 2nd membre"
        
-       
+       UPrev = U
+       !print*, "taille de U", size(U),Nx,nb_lignes, size(Uprev),size(Bord_inf), size(Bord_sup)
        Call GC(U,SecondMembre)
-       print*,"j'ai fait le gradient conjugué"
+       ! print*,"j'ai fait le gradient conjugué"
        !! Communication
        do i=1,Nx
+          print*, " taille de Nx", Nx, size(U), (nb_lignes-2*(R-1))*Nx + 1 + i, (1+2*(R-1)-1)*Nx + 1 + i,R 
           Bord_inf = U( (nb_lignes-2*(R-1))*Nx + 1 + i)
           Bord_sup = U( (1+2*(R-1)-1)*Nx + 1 + i)
        end do
-
-       Allocate(Tmp(Nx))
        if (Np /= 1) then
           if (me==0) then    
              Tmp = Bord_sup
-             Call MPI_Recv(Bord_sup,Nx,MPI_REAL,me+1,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE,statinfo)   
-             Call MPI_Send(Tmp, Nx,MPI_REAL,me+1,MPI_ANY_TAG,MPI_COMM_WORLD,statinfo)
+        !     print*,"Je suis le proc", me,me+1
+             Call MPI_Recv(Bord_sup,Nx,MPI_REAL,me+1,tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE,statinfo)   
+             Call MPI_Send(Tmp, Nx,MPI_REAL,me+1,tag,MPI_COMM_WORLD,statinfo)
+             print*, "j'ai reçu"
           else if (me==Np-1) then
              Tmp = Bord_inf
-             Call MPI_Recv(Bord_inf,Nx,MPI_REAL,me-1,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE,statinfo)
-             Call MPI_Send(Tmp, Nx,MPI_REAL,me-1,MPI_ANY_TAG,MPI_COMM_WORLD,statinfo)
-
+             
+       !      print*,"Je suis le proc", me,me-1
+             Call MPI_Send(Tmp, Nx,MPI_REAL,me-1,tag,MPI_COMM_WORLD,statinfo)
+             !print*, "j'ai envoyé"
+             Call MPI_Recv(Bord_inf,Nx,MPI_REAL,me-1,tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE,statinfo)
+          
           else 
-
-             Call MPI_Send(Bord_sup, Nx,MPI_REAL,me+1,MPI_ANY_TAG,MPI_COMM_WORLD,statinfo)
-             Call MPI_Send(Bord_inf, Nx,MPI_REAL,me-1,MPI_ANY_TAG,MPI_COMM_WORLD,statinfo)  
-             Call MPI_Recv(Bord_sup,Nx,MPI_REAL,me+1,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE,statinfo)   
-             Call MPI_Recv(Bord_inf,Nx,MPI_REAL,me-1,MPI_ANY_TAG,MPI_COMM_WORLD,MPI_STATUS_IGNORE,statinfo)   
+      !       print*, "Je suis perdu"
+             Call MPI_Send(Bord_sup, Nx,MPI_REAL,me+1,tag,MPI_COMM_WORLD,statinfo)
+             Call MPI_Send(Bord_inf, Nx,MPI_REAL,me-1,tag,MPI_COMM_WORLD,statinfo)  
+             Call MPI_Recv(Bord_sup,Nx,MPI_REAL,me+1,tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE,statinfo)   
+             Call MPI_Recv(Bord_inf,Nx,MPI_REAL,me-1,tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE,statinfo)   
           end if
        end if
-     print*,"j'ai communiqué"
              
        Print *, "-------------------------------------"
        t = t + dt
-       max=0
+       max=dot_product(U-UPrev,U-UPrev)
     End Do
 
     If (SystType == "Stationnaire" .or. SystType == "Sinusoidal") Then
@@ -129,7 +135,7 @@ PROGRAM Main
 
     Print *, U
   !Deallocation
-    Deallocate(U, SecondMembre, Uprev, Bord_inf, Bord_sup)
+    Deallocate(U, SecondMembre, Uprev, Bord_inf, Bord_sup,Tmp)
 
     call MPI_FINALIZE(statinfo)
 

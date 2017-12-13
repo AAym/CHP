@@ -1,4 +1,4 @@
-CC=mpif90
+CC=mpif90 -fbounds-check
 PROG = run
 SRC = Data.f90 Num.f90 Func.f90 System.f90 GC.f90
 OBJ = $(SRC:.f90=.o)

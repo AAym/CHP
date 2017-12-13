@@ -30,16 +30,16 @@ CONTAINS
       P = R
 
       Do while ( dot_product(R,R) > epsilon)
-        Print *, "ProdScal = ", dot_product(R,R)
+        !Print *, "ProdScal = ", dot_product(R,R)
         Z = ProdMat(P)
-        Print *, "Z = ", Z
+        !Print *, "Z = ", Z
         alpha = dot_product(R,R)/dot_product(P,Z)
         U = U + alpha*P
         Rprev = R
         R = R - alpha*Z
         beta = dot_product(R,R)/dot_product(RPrev,RPrev)
         P = R + beta*P
-        Print *, "||R|| = ", dot_product(R,R)
+        !Print *, "||R|| = ", dot_product(R,R)
       !  Call SLEEP(1)
       End Do
 

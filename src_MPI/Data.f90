@@ -12,10 +12,10 @@ CONTAINS
   Subroutine ReadData()
 
     Character (len = 32) :: file_name
-
-    print *, "Nom du fichier ?"
+    
     file_name="Data.txt"
-
+    print *, "Nom du fichier ? ", file_name
+  
     ! Ouverture fichier data.txt
     open (unit=11,file=file_name,action="read",status="old")
 
