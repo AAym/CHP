@@ -97,7 +97,7 @@ CONTAINS
        in=i1+diveuc
     else
        i1=me*diveuc+reste+1
-       in=i1+diveuc-1
+       in=i1+diveuc
     end if
 
     
