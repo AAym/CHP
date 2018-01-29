@@ -18,33 +18,35 @@ MODULE System
 CONTAINS
 
   ! Definit le second membre de notre système matriciel : F + U + CdB (Fonctionnel)
-  Subroutine BuiltSecondMembre(SecondMembre,U,t,nb_lignes,i1,Bord_inf,Bord_sup)
+  Subroutine BuiltSecondMembre(SecondMembre,U,t,i1,iN,Bord_inf,Bord_sup)
 	
 
-    Integer,intent(in)::nb_lignes,i1
-    Real, Dimension(nb_lignes), Intent(out):: SecondMembre
-    Real, Dimension(:), Intent(in):: U,Bord_inf,Bord_sup
+    Integer,intent(in)::i1, iN
+    Real, Dimension(i1*Nx+1:iN*Nx), Intent(out):: SecondMembre
+    Real, Dimension(i1*Nx+1:iN*Nx), Intent(in):: U
+    Real, Dimension(Nx),Intent(in)::Bord_inf,Bord_sup
     Real, intent(in) :: t
     Integer :: k
     Real, Dimension(2) :: XY
     Integer, Dimension(2) :: IJ
 
 	
-    Do k = i1,nb_lignes+i1-1
+    Do k = i1*Nx+1,iN*Nx
+      print*, "k= ", k
       XY = Direct(k)
       IJ = Local(k)
-      SecondMembre(k-i1+1) = dt*F(XY(1),XY(2),t) + U(k-i1+1)
+      SecondMembre(k) = dt*F(XY(1),XY(2),t) + U(k)
       If (IJ(1)==1) Then
-        SecondMembre(k-i1+1) = SecondMembre(k-i1+1) + D*dt/(dx*dx)*G(0.,XY(2))
+        SecondMembre(k) = SecondMembre(k) + D*dt/(dx*dx)*H(0.,XY(2))
       End If
       If (IJ(2)==i1) Then
-        SecondMembre(k-i1+1) = SecondMembre(k-i1+1) + D*dt/(dy*dy)*Bord_inf(IJ(1))
+        SecondMembre(k) = SecondMembre(k) + D*dt/(dy*dy)*Bord_inf(IJ(1))
       End If
       If (IJ(1)==Nx) Then
-        SecondMembre(k-i1+1) = SecondMembre(k-i1+1) + D*dt/(dx*dx)*G(Lx,XY(2))
+        SecondMembre(k) = SecondMembre(k) + D*dt/(dx*dx)*H(Lx,XY(2))
       End If
-      If (IJ(2)==nb_lignes+i1-1) Then
-        SecondMembre(k-i1+1) = SecondMembre(k-i1+1) + D*dt/(dy*dy)*Bord_sup(IJ(1))
+      If (IJ(2)==iN) Then
+        SecondMembre(k) = SecondMembre(k) + D*dt/(dy*dy)*Bord_sup(IJ(1))
       End If
 !      Print *, "k = ", k, "SecondMembre(k) = ", SecondMembre(k)
     End Do
@@ -55,15 +57,16 @@ CONTAINS
 
 
   ! Définit le produit matriciel A*U (Fonctionnel)
-  Function ProdMat(U) Result(AU)
+  Function ProdMat(U, i1, iN) Result(AU)
 
-    Real, Dimension(Nx*Ny), Intent(in):: U
-    Real, Dimension(Nx*Ny) :: AU
+    Real, Dimension((iN-i1)*Nx), Intent(in):: U
+    Integer, intent(in)::i1, iN
+    Real, Dimension((iN-i1)*Nx) :: AU
     Integer :: k
     Real, Dimension(2) :: XY
     Integer, Dimension(2) :: IJ
 
-    Do k = 1,(Nx*Ny)
+    Do k = 1, (iN-i1)*Nx
       IJ = Local(k)
       AU(k) = ( 1 + 2*D*dt/(dx*dx) + 2*D*dt/(dy*dy) )* U(k)
       If (IJ(1)/=1) Then

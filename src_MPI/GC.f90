@@ -11,27 +11,28 @@ MODULE GradientConjugue
 
 CONTAINS
 
-  Subroutine GC(U,SecondMembre)
+  Subroutine GC(U,SecondMembre, i1, iN)
 
     !In
-      Real, Dimension(Nx*Ny), Intent(inout):: U
-      Real, Dimension(Nx*Ny), Intent(in):: SecondMembre
+      Real, Dimension(i1*Nx+1:iN*Nx), Intent(inout):: U
+      Real, Dimension(i1*Nx+1:iN*Nx), Intent(in):: SecondMembre
+      Integer, intent(in)::i1, iN
     !Num
       Integer :: k
       Real, Dimension(2) :: XY
       Integer, Dimension(2) :: IJ
     !VarGC
-      Real, Dimension(Nx*Ny) :: R, RPrev, P, Z
+      Real, Dimension(i1*Nx+1:iN*Nx) :: R, RPrev, P, Z
       Real :: alpha, beta
 
     !Initilialisation
-      R = SecondMembre - ProdMat(U)
+      R = SecondMembre - ProdMat(U, i1, iN)
       Rprev = R
       P = R
 
       Do while ( dot_product(R,R) > epsilon)
         !Print *, "ProdScal = ", dot_product(R,R)
-        Z = ProdMat(P)
+        Z = ProdMat(P, i1, iN)
         !Print *, "Z = ", Z
         alpha = dot_product(R,R)/dot_product(P,Z)
         U = U + alpha*P

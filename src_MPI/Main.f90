@@ -17,7 +17,7 @@ PROGRAM Main
     
 
   ! Variables test
-    Integer :: k1, k2, k3, k4, Np, me, i1, in,nb_lignes
+    Integer :: Np, me, i1, iN
     Real, Dimension(:), Allocatable  ::  Bord_inf, Bord_sup
   ! Variables résolution
     Real, Dimension(:), Allocatable :: U , SecondMembre, Uprev, Tmp,Uexact
@@ -48,13 +48,16 @@ PROGRAM Main
     Print *, "------------------------------------------"
   
     call charge(me, Ny, Np, i1, in)
-    
+    print*, "me : ", me
+    print*, "i1 : ", i1
+    print*, "iN : ", iN
     !Allocation
-    print*, "ligne", in, i1, Ny
-    nb_lignes = in-i1+1
-    Allocate(U(Nx*nb_lignes), SecondMembre(Nx*nb_lignes), Uprev(Nx*nb_lignes),Uexact(Nx*nb_lignes))
+    !nb_lignes = in-i1+1
+    !Allocate(U(Nx*nb_lignes), SecondMembre(Nx*nb_lignes), Uprev(Nx*nb_lignes),Uexact(Nx*nb_lignes))
+    Allocate(U(i1*Nx+1:iN*Nx), SecondMembre(i1*Nx+1:iN*Nx), Uprev(i1*Nx+1:iN*Nx),Uexact(i1*Nx+1:iN*Nx))
     Allocate(Bord_inf(Nx), Bord_sup(Nx),Tmp(Nx))
-      
+     
+ 
     !Résolution
     t = 0
     U = 0
@@ -66,78 +69,53 @@ PROGRAM Main
 
     if(me==0) then
 	do i=1,Nx
-		Bord_inf(i)=h(i*dx,0.0)
+		Bord_inf(i)=G(i*dx,0.0)
 	end do
     end if
 
     if (me==Np-1) then
 	do i=1,Nx
-		Bord_sup(i)=h(i*dx,Ly)
+		Bord_sup(i)=G(i*dx,Ly)
 	end do
     end if
-    ! print*,"je rentre dans la boucle"
+
     
     Do while (max > 1E-1)
        ! Ne pas oublier la construction/actualisation de bord_inf et bord_sup
-
-       !print*,"J'ai contruit 2nd membre 1"
-       Call BuiltSecondMembre(SecondMembre,U,t,nb_lignes,i1,Bord_inf,Bord_sup)
-       !print*,"J'ai contruit 2nd membre"
+       print*, "Ca tourne !!!"
+       Call BuiltSecondMembre(SecondMembre,U,t,i1,iN,Bord_inf,Bord_sup)
        
        UPrev = U
-       !print*, "taille de U", size(U),Nx,nb_lignes, size(Uprev),size(Bord_inf), size(Bord_sup)
-       Call GC(U,SecondMembre)
-       ! print*,"j'ai fait le gradient conjugué"
-       !! Communication
-       do i=1,Nx
-          !print*, " taille de Nx", Nx, size(U), (nb_lignes-2*(R-1))*Nx + 1 + i, (1+2*(R-1)-1)*Nx + 1 + i,R 
-          !Bord_inf = U( (nb_lignes-2*(R-1))*Nx + 1 + i)
-          !Bord_sup = U( (1+2*(R-1)-1)*Nx + 1 + i)
+       ! Code vérifié jusqu'ici
+       Call GC(U,SecondMembre, i1, iN)
 
-          Bord_inf = U(1:Nx)
-          Bord_sup = U((nb_lignes-1)*Nx+1:nb_lignes*Nx)
-       end do
+       !! Communication
+
+       Bord_inf = U(i1*Nx+1:i1*Nx+Nx)
+       Bord_sup = U((iN-1)*Nx+1:iN*Nx)
+
        if (Np /= 1) then
 
-          if (me==2) then
-             Print*, "--------------------------------------------------"
-             Print*, "--------------------------------------------------"
-             Print*, Bord_sup
-             Print*, "--------------------------------------------------"
-             Print*, Bord_inf
-          end if
           if (me==0) then    
              Tmp = Bord_sup
-        !     print*,"Je suis le proc", me,me+1
              Call MPI_Recv(Bord_sup,Nx,MPI_REAL,me+1,tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE,statinfo)   
              Call MPI_Send(Tmp, Nx,MPI_REAL,me+1,tag,MPI_COMM_WORLD,statinfo)
-             !print*, "j'ai reçu"
+
           else if (me==Np-1) then
              Tmp = Bord_inf
-             
-       !      print*,"Je suis le proc", me,me-1
              Call MPI_Send(Tmp, Nx,MPI_REAL,me-1,tag,MPI_COMM_WORLD,statinfo)
-             !print*, "j'ai envoyé"
              Call MPI_Recv(Bord_inf,Nx,MPI_REAL,me-1,tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE,statinfo)
           
           else 
-      !       print*, "Je suis perdu"
              Call MPI_Send(Bord_sup, Nx,MPI_REAL,me+1,tag,MPI_COMM_WORLD,statinfo)
              Call MPI_Send(Bord_inf, Nx,MPI_REAL,me-1,tag,MPI_COMM_WORLD,statinfo)  
              Call MPI_Recv(Bord_sup,Nx,MPI_REAL,me+1,tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE,statinfo)   
              Call MPI_Recv(Bord_inf,Nx,MPI_REAL,me-1,tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE,statinfo)   
           end if
 
-          if (me==2) then
-             Print*, "--------------------------------------------------"
-             Print*, "--------------------------------------------------"
-             Print*, Bord_sup
-             Print*, "--------------------------------------------------"
-             Print*, Bord_inf
-          end if
        end if
              
-       Print *, "-------------------------------------"
+       !Print *, "-------------------------------------"
        t = t + dt
        !max=dot_product(U-UPrev,U-UPrev) ! Ce n'est pas ça qui fait planter, mais la norme n'est calculée que par proc et pas pour la matrice entière
     End Do
@@ -154,7 +132,7 @@ PROGRAM Main
 
     !Print *, U
   !Deallocation
-    Deallocate(U, SecondMembre, Uprev, Bord_inf, Bord_sup,Tmp)
+    Deallocate(U, SecondMembre, Uprev, Bord_inf, Bord_sup, Tmp, Uexact)
 
     call MPI_FINALIZE(statinfo)
 

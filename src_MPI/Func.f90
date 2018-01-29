@@ -93,16 +93,14 @@ CONTAINS
     reste=N-Np*diveuc
 
     if(me<reste) then
-       i1=me*diveuc+me+1
-       in=i1+diveuc
+       i1=me*(diveuc+1)+1
+       in=(1+me)*(diveuc+1)
     else
-       i1=me*diveuc+reste+1
+       i1=1+reste+me*diveuc
        in=i1+diveuc
     end if
-
-    
-
-
+    i1=i1-1
+    iN=iN-1
   end subroutine charge
 
 

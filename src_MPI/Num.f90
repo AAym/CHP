@@ -33,12 +33,12 @@ CONTAINS
     Integer, Intent(in) :: k
     Integer, Dimension(2) :: IJ
 
-    If (mod(k,Ny)==0) Then
-      IJ(2) = Ny
-      IJ(1) = k/Ny
+    If (mod(k,Nx)==0) Then
+      IJ(1) = Nx
+      IJ(2) = k/Nx
     Else
-      IJ(1) = k/Ny +1
-      IJ(2) = mod(k,Ny)
+      IJ(1) = mod(k,Nx)
+      IJ(2) = k/Nx+1
     End If
 
   End Function
