@@ -23,8 +23,8 @@ PROGRAM Main
     Real, Dimension(:), Allocatable :: U , SecondMembre, Uprev, Tmp,Uexact
     Integer, Dimension(2) :: IJ
     Real, Dimension(2) :: XY
-    Integer :: k, i
-    Real :: t, max
+    Integer :: k, i, j
+    Real :: t, max, maxtemp
 
 
     call MPI_INIT(statinfo)
@@ -54,9 +54,8 @@ PROGRAM Main
     !Allocation
     !nb_lignes = in-i1+1
     !Allocate(U(Nx*nb_lignes), SecondMembre(Nx*nb_lignes), Uprev(Nx*nb_lignes),Uexact(Nx*nb_lignes))
-    Allocate(U(i1*Nx+1:iN*Nx), SecondMembre(i1*Nx+1:iN*Nx), Uprev(i1*Nx+1:iN*Nx),Uexact(i1*Nx+1:iN*Nx))
+    Allocate(U(i1*Nx+1:iN*Nx+Nx), SecondMembre(i1*Nx+1:iN*Nx+Nx), Uprev(i1*Nx+1:iN*Nx+Nx),Uexact(i1*Nx+1:iN*Nx+Nx))
     Allocate(Bord_inf(Nx), Bord_sup(Nx),Tmp(Nx))
-     
  
     !Résolution
     t = 0
@@ -80,19 +79,22 @@ PROGRAM Main
     end if
 
     
-    Do while (max > 1E-1)
+    !Do while (max > 1E-1)
+    Do i=1,1
+       print*, max
        ! Ne pas oublier la construction/actualisation de bord_inf et bord_sup
-       print*, "Ca tourne !!!"
+       !print*, "Ca tourne !!!"
        Call BuiltSecondMembre(SecondMembre,U,t,i1,iN,Bord_inf,Bord_sup)
-       
+       print*,SecondMembre
        UPrev = U
+
        ! Code vérifié jusqu'ici
        Call GC(U,SecondMembre, i1, iN)
 
        !! Communication
 
-       Bord_inf = U(i1*Nx+1:i1*Nx+Nx)
-       Bord_sup = U((iN-1)*Nx+1:iN*Nx)
+       !Bord_inf = U(i1*Nx+1:i1*Nx+Nx)   !if i1==0 ?
+       !Bord_sup = U(iN*Nx+1:iN*Nx+Nx)   !if iN==Ny-1  ?
 
        if (Np /= 1) then
 
@@ -117,20 +119,41 @@ PROGRAM Main
              
        !Print *, "-------------------------------------"
        t = t + dt
-       !max=dot_product(U-UPrev,U-UPrev) ! Ce n'est pas ça qui fait planter, mais la norme n'est calculée que par proc et pas pour la matrice entière
+       max=dot_product(U-UPrev,U-UPrev)
+       if (me/=0) then
+          Call MPI_Send(max, 1,MPI_REAL,0,tag,MPI_COMM_WORLD,statinfo)
+       end if
+       if (me==0) then
+          do j=1,Np-1
+             Call MPI_Recv(maxtemp,1,MPI_REAL,j,tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE,statinfo)
+             max=max+maxtemp
+          end do
+          do j=1,Np-1
+             Call MPI_Send(max, 1,MPI_REAL,j,tag,MPI_COMM_WORLD,statinfo)
+          end do
+       end if
+       if (me/=0) then
+          Call MPI_Recv(max,1,MPI_REAL,0,tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE,statinfo)
+       end if
     End Do
 
-    !If (SystType == "Stationnaire" .or. SystType == "Sinusoidal") Then
-    !  Do k=1,(Nx*Ny)
-    !    XY = Direct(k)
-    !    Uexact(k) = Exact(XY(1),XY(2))
-    !  End Do
-    !  If (dot_product(U-Uexact,U-Uexact) < 1E-5) Then
-    !      Print *, "L'algorithme a convergé vers la solution exacte"
-    !  End if
-    !End If
+    if (me==0) then
+       If (SystType == "Stationnaire" .or. SystType == "Sinusoidal") Then
+          Do k=1,iN*Nx+Nx
+             XY = Local(k)
+             print*,k,XY(1),XY(2)
+             Uexact(k) = Exact(XY(1)/Nx,XY(2)/Ny)
+          End Do
+          If (dot_product(U-Uexact,U-Uexact) < 1E-5) Then
+             Print *, "L'algorithme a convergé vers la solution exacte"
+          End if
+          print*, "Solution exacte : "
+          print*,Uexact
+       End If
+       print*, "Solution calculée : "
+       Print *, U
+    end if
 
-    !Print *, U
   !Deallocation
     Deallocate(U, SecondMembre, Uprev, Bord_inf, Bord_sup, Tmp, Uexact)
 

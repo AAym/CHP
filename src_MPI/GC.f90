@@ -14,15 +14,15 @@ CONTAINS
   Subroutine GC(U,SecondMembre, i1, iN)
 
     !In
-      Real, Dimension(i1*Nx+1:iN*Nx), Intent(inout):: U
-      Real, Dimension(i1*Nx+1:iN*Nx), Intent(in):: SecondMembre
+      Real, Dimension(i1*Nx+1:iN*Nx+Nx), Intent(inout):: U
+      Real, Dimension(i1*Nx+1:iN*Nx+Nx), Intent(in):: SecondMembre
       Integer, intent(in)::i1, iN
     !Num
       Integer :: k
       Real, Dimension(2) :: XY
       Integer, Dimension(2) :: IJ
     !VarGC
-      Real, Dimension(i1*Nx+1:iN*Nx) :: R, RPrev, P, Z
+      Real, Dimension(i1*Nx+1:iN*Nx+Nx) :: R, RPrev, P, Z
       Real :: alpha, beta
 
     !Initilialisation

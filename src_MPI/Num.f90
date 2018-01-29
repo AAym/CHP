@@ -22,7 +22,7 @@ CONTAINS
     Integer, Intent(in) :: i,j
     Integer :: k
 
-    k = Ny*(i-1)+j
+    k = Nx*(j-1)+i
 
   End Function
 

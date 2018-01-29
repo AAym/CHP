@@ -81,7 +81,7 @@ CONTAINS
 
   End Function
 
-  subroutine charge(me,N,Np,i1,in)
+  subroutine charge(me,N,Np,i1,iN)
     
     implicit none
 
@@ -100,7 +100,7 @@ CONTAINS
        in=i1+diveuc
     end if
     i1=i1-1
-    iN=iN-1
+    iN=iN-2
   end subroutine charge
 
 
