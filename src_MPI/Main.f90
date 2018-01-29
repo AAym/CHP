@@ -78,9 +78,8 @@ PROGRAM Main
     end if
 
     
-    !Do while (max > 1E-1)
-    Do i=1,100
-       !print*, "max : ", max
+    Do while (max > 1E-8)
+       print*, "max : ", max
 
        !print*, "Ca tourne !!!"
        Call BuiltSecondMembre(SecondMembre,U,t,i1,iN,Bord_inf,Bord_sup)
@@ -159,7 +158,20 @@ PROGRAM Main
        Print *, U
     end if
 
-  !Deallocation
+    ! Ecriture dans un fichier
+    
+    open(13,file="Solution_calculee.txt",form="formatted")
+    open(14,file="Solution_exact.txt",form="formatted")
+    do k=i1*Nx+1,iN*Nx+Nx
+       XY = Local(k)
+       write(13,'(F10.5,F10.5,F10.5)')XY(1)*dx,XY(2)*dy,U(k)
+       write(14,'(F10.5,F10.5,F10.5)')XY(1)*dx,XY(2)*dy,Uexact(k)
+    end do
+    close(13)
+    close(14)
+       
+    !Deallocation
+
     Deallocate(U, SecondMembre, Uprev, Bord_inf, Bord_sup, Tmp, Uexact)
 
     call MPI_FINALIZE(statinfo)

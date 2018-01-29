@@ -1,7 +1,7 @@
 1                 #Lx
 1                 #Ly
-12                 #Nx
-12                 #Ny
+120                 #Nx
+120                 #Ny
 1                 #D
 Sinusoidal        #SystType
 1E-10             #epsilon
