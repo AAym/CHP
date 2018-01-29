@@ -48,13 +48,12 @@ PROGRAM Main
     Print *, "------------------------------------------"
   
     call charge(me, Ny, Np, i1, in)
-    print*, "me : ", me
-    print*, "i1 : ", i1
-    print*, "iN : ", iN
+
     !Allocation
     !nb_lignes = in-i1+1
     !Allocate(U(Nx*nb_lignes), SecondMembre(Nx*nb_lignes), Uprev(Nx*nb_lignes),Uexact(Nx*nb_lignes))
     Allocate(U(i1*Nx+1:iN*Nx+Nx), SecondMembre(i1*Nx+1:iN*Nx+Nx), Uprev(i1*Nx+1:iN*Nx+Nx),Uexact(i1*Nx+1:iN*Nx+Nx))
+
     Allocate(Bord_inf(Nx), Bord_sup(Nx),Tmp(Nx))
  
     !Résolution
@@ -80,21 +79,25 @@ PROGRAM Main
 
     
     !Do while (max > 1E-1)
-    Do i=1,1
-       print*, max
-       ! Ne pas oublier la construction/actualisation de bord_inf et bord_sup
+    Do i=1,100
+       !print*, "max : ", max
+
        !print*, "Ca tourne !!!"
        Call BuiltSecondMembre(SecondMembre,U,t,i1,iN,Bord_inf,Bord_sup)
-       print*,SecondMembre
+       !print*,SecondMembre
        UPrev = U
 
        ! Code vérifié jusqu'ici
        Call GC(U,SecondMembre, i1, iN)
 
        !! Communication
+       if (me/=0)then
+          Bord_inf = U(i1*Nx+1:i1*Nx+Nx)
+       end if
 
-       !Bord_inf = U(i1*Nx+1:i1*Nx+Nx)   !if i1==0 ?
-       !Bord_sup = U(iN*Nx+1:iN*Nx+Nx)   !if iN==Ny-1  ?
+       if (me/=Np-1)then
+          Bord_sup = U(iN*Nx+1:iN*Nx+Nx)
+       end if
 
        if (Np /= 1) then
 
@@ -137,13 +140,15 @@ PROGRAM Main
        end if
     End Do
 
+
     if (me==0) then
        If (SystType == "Stationnaire" .or. SystType == "Sinusoidal") Then
           Do k=1,iN*Nx+Nx
              XY = Local(k)
-             print*,k,XY(1),XY(2)
-             Uexact(k) = Exact(XY(1)/Nx,XY(2)/Ny)
+             !print*,k,XY(1),XY(2)
+             Uexact(k) = Exact(XY(1)*dx,XY(2)*dy)
           End Do
+
           If (dot_product(U-Uexact,U-Uexact) < 1E-5) Then
              Print *, "L'algorithme a convergé vers la solution exacte"
           End if

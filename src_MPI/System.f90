@@ -22,24 +22,25 @@ CONTAINS
 	
 
     Integer,intent(in)::i1, iN
-    Real, Dimension(i1*Nx+1:iN*Nx), Intent(out):: SecondMembre
-    Real, Dimension(i1*Nx+1:iN*Nx), Intent(in):: U
+    Real, Dimension(i1*Nx+1:iN*Nx+Nx), Intent(out):: SecondMembre
+    Real, Dimension(i1*Nx+1:iN*Nx+Nx), Intent(in):: U
     Real, Dimension(Nx),Intent(in)::Bord_inf,Bord_sup
     Real, intent(in) :: t
     Integer :: k
     Real, Dimension(2) :: XY
     Integer, Dimension(2) :: IJ
 
-	
-    Do k = i1*Nx+1,iN*Nx
+
+    Do k = i1*Nx+1,(iN+1)*Nx
       !print*, "k= ", k
       !XY = Direct(k)
       IJ = Local(k)
-      XY(1)=IJ(1)/dx
-      XY(2)=IJ(2)/dy
+      XY(1)=IJ(1)*dx
+      XY(2)=IJ(2)*dy
       SecondMembre(k) = dt*F(XY(1),XY(2),t) + U(k)
       If (IJ(1)==1) Then
         SecondMembre(k) = SecondMembre(k) + D*dt/(dx*dx)*H(0.,XY(2))
+        !print*, "terme : ", XY(2)
       End If
       If (IJ(2)==i1+1) Then
         SecondMembre(k) = SecondMembre(k) + D*dt/(dy*dy)*Bord_inf(IJ(1))
@@ -50,10 +51,10 @@ CONTAINS
       If (IJ(2)==iN+1) Then
         SecondMembre(k) = SecondMembre(k) + D*dt/(dy*dy)*Bord_sup(IJ(1))
       End If
-!      Print *, "k = ", k, "SecondMembre(k) = ", SecondMembre(k)
+      !Print *, "SecondMembre(1) = ", SecondMembre(1)
     End Do
 
-    !Print *, "SecondMembre = ", SecondMembre
+    !Print *, "SecondMembre = ", SecondMembre(i1*Nx+1)
 
   End Subroutine
 
