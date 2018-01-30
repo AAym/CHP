@@ -4,7 +4,17 @@ set xlabel "Np"
 set ylabel "Sp"
 set title "Speedup"
 set term png
-set output "sp.png"
+set output "sp_enseirb.png"
 set grid
 set tics out
-plot "mesures.csv" using 1:2 with lines title "sp"
+plot "mesures_enseirb.csv" using 1:2 with lines title "sp"
+
+
+set xlabel "N"
+set ylabel "Temps"
+set title "Temps en fonction de la taille de la matrice"
+set term png
+set output "n_enseirb.png"
+set grid
+set tics out
+plot "mesures_enseirb_N.csv" using 1:2 with lines title "time"
