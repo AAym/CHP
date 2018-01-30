@@ -25,8 +25,10 @@ PROGRAM Main
     Real, Dimension(2) :: XY
     Integer :: k, i, j
     Real :: t, max, maxtemp
-
-
+    Real :: t1, t2, t_exec, t_exec_loc
+    Real :: t1_com, t2_com, t_com_loc, t_com
+    t_com = 0
+    call cpu_time(t1)
     call MPI_INIT(statinfo)
     call MPI_COMM_RANK(MPI_COMM_WORLD,me,statinfo)
     call MPI_COMM_SIZE(MPI_COMM_WORLD,Np,statinfo)
@@ -79,7 +81,7 @@ PROGRAM Main
 
     
     Do while (max > 1E-8)
-       print*, "max : ", max
+       !print*, "max : ", max
 
        !print*, "Ca tourne !!!"
        Call BuiltSecondMembre(SecondMembre,U,t,i1,iN,Bord_inf,Bord_sup)
@@ -98,6 +100,8 @@ PROGRAM Main
           Bord_sup = U(iN*Nx+1:iN*Nx+Nx)
        end if
 
+       call cpu_time(t1_com)
+   
        if (Np /= 1) then
 
           if (me==0) then    
@@ -118,10 +122,13 @@ PROGRAM Main
           end if
 
        end if
-             
+       
+       call cpu_time(t2_com)
+       t_com_loc = t_com_loc + t2_com-t1_com
        !Print *, "-------------------------------------"
        t = t + dt
        max=dot_product(U-UPrev,U-UPrev)
+       call cpu_time(t1_com)
        if (me/=0) then
           Call MPI_Send(max, 1,MPI_REAL,0,tag,MPI_COMM_WORLD,statinfo)
        end if
@@ -138,8 +145,10 @@ PROGRAM Main
           Call MPI_Recv(max,1,MPI_REAL,0,tag,MPI_COMM_WORLD,MPI_STATUS_IGNORE,statinfo)
        end if
     End Do
+    call cpu_time(t2_com)
+    t_com_loc =  t_com_loc + t2_com-t1_com
 
-
+    
     if (me==0) then
        If (SystType == "Stationnaire" .or. SystType == "Sinusoidal") Then
           Do k=1,iN*Nx+Nx
@@ -151,11 +160,11 @@ PROGRAM Main
           If (dot_product(U-Uexact,U-Uexact) < 1E-5) Then
              Print *, "L'algorithme a convergé vers la solution exacte"
           End if
-          print*, "Solution exacte : "
-          print*,Uexact
+          !print*, "Solution exacte : "
+          !print*,Uexact
        End If
-       print*, "Solution calculée : "
-       Print *, U
+       !print*, "Solution calculée : "
+       !Print *, U
     end if
 
     ! Ecriture dans un fichier
@@ -174,6 +183,23 @@ PROGRAM Main
 
     Deallocate(U, SecondMembre, Uprev, Bord_inf, Bord_sup, Tmp, Uexact)
 
-    call MPI_FINALIZE(statinfo)
+    
+    call cpu_time(t2)
+    t_exec_loc = t2 -t1
+    print*, "Temps local proc", me,": ", t_exec_loc
+    print*, "Temps local comm proc", me,": ", t_com_loc
+     
+    if (Np > 1) then
+       call MPI_REDUCE(t_exec_loc,t_exec,1,MPI_REAL,MPI_MAX,0,MPI_COMM_WORLD)
+       call MPI_REDUCE(t_com_loc,t_com,1,MPI_REAL,MPI_MAX,0,MPI_COMM_WORLD)
+    
+       if ( me==0) then
+          print*, "Temps global : "
+          print*, t_exec
+          print*, "Temps comm global : "
+          print*, t_com
+       endif
+    endif
+     call MPI_FINALIZE(statinfo)
 
 END PROGRAM Main

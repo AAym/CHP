@@ -1,0 +1,10 @@
+set datafile separator ","
+
+set xlabel "Np"
+set ylabel "Sp"
+set title "Speedup"
+set term png
+set output "sp.png"
+set grid
+set tics out
+plot "mesures.csv" using 1:2 with lines title "sp"
